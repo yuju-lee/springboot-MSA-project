@@ -1,5 +1,5 @@
--- Users 테이블 생성
-CREATE TABLE Users (
+-- Members 테이블 생성
+CREATE TABLE Members (
                        email VARCHAR(255) PRIMARY KEY,
                        name VARCHAR(255),
                        password VARCHAR(255),
@@ -13,7 +13,7 @@ CREATE TABLE Orders (
                         userID VARCHAR(255),
                         orderStatus VARCHAR(255),
                         orderAt TIMESTAMP,
-                        FOREIGN KEY (userID) REFERENCES Users(email)
+                        FOREIGN KEY (userID) REFERENCES Members(email)
 );
 
 -- OrderDetail 테이블 생성
@@ -41,6 +41,6 @@ CREATE TABLE WishList (
                           userID VARCHAR(255),
                           productID INT,
                           addAt TIMESTAMP,
-                          FOREIGN KEY (userID) REFERENCES Users(email),
+                          FOREIGN KEY (userID) REFERENCES Members(email),
                           FOREIGN KEY (productID) REFERENCES Products(productID)
 );
