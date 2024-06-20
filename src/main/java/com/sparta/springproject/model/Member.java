@@ -11,7 +11,7 @@ import lombok.Setter;
 @Table(name = "Users")
 @Getter
 @Setter
-public class User {
+public class Member {
     @Id
     @Column(name = "email")
     private String email;
