@@ -7,6 +7,7 @@ import com.sparta.springproject.model.Member;
 import com.sparta.springproject.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,35 +27,50 @@ public class MemberService {
     }
 
     public Member registerUser(MemberDTO memberDTO) {
+        if (memberDTO.getEmail() == null || memberDTO.getEmail().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be empty");
+        }
+
+        if (memberDTO.getUserName() == null || memberDTO.getUserName().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be empty");
+        }
+
+        if (memberDTO.getPassword() == null || memberDTO.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be empty");
+        }
+
         if (memberRepository.findByEmail(memberDTO.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email is already in use.");
+            throw new IllegalArgumentException("Email already in use");
         }
 
         Member member = new Member();
         member.setEmail(memberDTO.getEmail());
-        member.setUserName(passwordEncoder.encode(memberDTO.getUserName()));
+        member.setUserName(memberDTO.getUserName());
         member.setPassword(passwordEncoder.encode(memberDTO.getPassword()));
-        return memberRepository.save(member);
+
+        try {
+            return memberRepository.save(member);
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalArgumentException("Values cannot be null");
+        }
     }
 
-    public ResponseEntity<String> login(LoginRequestDTO requestDto, HttpServletResponse res) {
+    public void login(LoginRequestDTO requestDto, HttpServletResponse res) {
         String email = requestDto.getEmail();
         String password = requestDto.getPassword();
 
         // 사용자 확인
         Member member = memberRepository.findByEmail(email).orElseThrow(
-                () -> new IllegalArgumentException("Not registerd - Please try again")
+                () -> new IllegalArgumentException("Not registered - Please try again")
         );
 
         // 비밀번호 확인
         if (!passwordEncoder.matches(password, member.getPassword())) {
-            return ResponseEntity.badRequest().body("Invalid username or password.");
+            throw new IllegalArgumentException("Invalid username or password.");
         }
 
         // JWT 생성 및 쿠키에 저장 후 Response 객체에 추가
         String token = jwtUtil.createToken(member.getEmail(), member.getRole());
         jwtUtil.addJwtToCookie(token, res);
-
-        return ResponseEntity.ok("Login successful!");
     }
 }
