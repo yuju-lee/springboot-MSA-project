@@ -1,8 +1,10 @@
 package com.sparta.springproject.controller;
 
+import com.sparta.springproject.dto.LoginRequestDTO;
 import com.sparta.springproject.dto.MemberDTO;
 import com.sparta.springproject.model.Member;
 import com.sparta.springproject.service.MemberService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,5 +30,10 @@ public class MemberController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequestDTO requestDto, HttpServletResponse res) {
+        return memberService.login(requestDto, res);
     }
 }
