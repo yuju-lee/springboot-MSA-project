@@ -3,6 +3,7 @@ package com.sparta.springproject.controller;
 import com.sparta.springproject.dto.LoginRequestDTO;
 import com.sparta.springproject.dto.MemberDTO;
 import com.sparta.springproject.model.Member;
+import com.sparta.springproject.service.AuthService;
 import com.sparta.springproject.service.MemberService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -20,7 +21,7 @@ public class MemberController {
     public MemberController(MemberService memberService) {
         this.memberService = memberService;
     }
-
+    private AuthService authService;
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody MemberDTO memberDTO) {
         try {
@@ -33,26 +34,13 @@ public class MemberController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO, HttpServletResponse response, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
-        }
-
-        try {
-            memberService.login(loginRequestDTO, response);
-            return ResponseEntity.ok("Login successful!");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Void> login(@RequestBody LoginRequestDTO requestDto, HttpServletResponse res) {
+        authService.login(requestDto, res);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        return ResponseEntity.ok("Logout successful!");
-    }
-
-    @GetMapping("/test")
-    public ResponseEntity<?> test() {
-        return ResponseEntity.ok("Test successful!");
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String token) {
+        return authService.logout(token.substring(7)); // "Bearer " 부분 제거
     }
 }
