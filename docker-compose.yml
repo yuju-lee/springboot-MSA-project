@@ -2,14 +2,14 @@ version: '3.8'
 services:
   db:
     image: mysql:8.0
-    container_name: mysql-container
+    container_name: mysql_container
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "3307:3307"
+      - "3307:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 30s
@@ -17,7 +17,7 @@ services:
       retries: 5
 
   app:
-    image: springboot-proj
+    image: springboot_proj
     container_name: spring-app-container
     build:
       context: .
