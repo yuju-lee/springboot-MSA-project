@@ -8,7 +8,6 @@ import com.sparta.springproject.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -66,7 +65,7 @@ public class MemberService {
 
         // 비밀번호 확인
         if (!passwordEncoder.matches(password, member.getPassword())) {
-            throw new IllegalArgumentException("Invalid username or password.");
+            throw new IllegalArgumentException("Invalid password.");
         }
 
         // JWT 생성 및 쿠키에 저장 후 Response 객체에 추가
