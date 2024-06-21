@@ -48,4 +48,9 @@ public class MemberController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        return ResponseEntity.ok("Logout successful!");
+    }
 }
