@@ -8,6 +8,7 @@ import com.sparta.springproject.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +18,17 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
+    private final TokenBlacklistService tokenBlacklistService;
+
+
 
     @Autowired
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
+
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     public Member registerUser(MemberDTO memberDTO) {
@@ -72,4 +78,16 @@ public class MemberService {
         String token = jwtUtil.createToken(member.getEmail(), member.getRole());
         jwtUtil.addJwtToCookie(token, res);
     }
+
+
+    public ResponseEntity<String> logout(String token) {
+        // 토큰을 블랙리스트에 추가
+        tokenBlacklistService.addToBlacklist(token);
+        // 로그에 블랙리스트에 추가된 토큰을 기록
+        System.out.println("Blacklisted token: " + token);
+
+        // 응답으로 블랙리스트에 추가된 토큰 반환
+        return ResponseEntity.ok("Logout successful! Blacklisted token: " + token);
+    }
+
 }
