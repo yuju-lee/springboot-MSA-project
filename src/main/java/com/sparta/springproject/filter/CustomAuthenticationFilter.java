@@ -19,7 +19,7 @@ public class CustomAuthenticationFilter extends AbstractAuthenticationProcessing
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public CustomAuthenticationFilter() {
-        // url과 일치할 경우 해당 필터가` 동작합니다.
+        // url과 일치할 경우 해당 필터 동작
         super(new AntPathRequestMatcher("/api/login"));
     }
     @Override
@@ -47,7 +47,6 @@ public class CustomAuthenticationFilter extends AbstractAuthenticationProcessing
         );
 
         // Manager 에게 인증 처리
-
         return getAuthenticationManager().authenticate(token);
     }
 
