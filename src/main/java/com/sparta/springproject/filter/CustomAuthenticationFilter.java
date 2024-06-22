@@ -1,11 +1,9 @@
 package com.sparta.springproject.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sparta.springproject.dto.LoginResponseDTO;
 import com.sparta.springproject.jwt.CustomAuthenticationToken;
 import com.sparta.springproject.jwt.JwtUtil;
 import com.sparta.springproject.service.TokenBlacklistService;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
@@ -18,7 +16,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 public class CustomAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
@@ -28,7 +25,7 @@ public class CustomAuthenticationFilter extends AbstractAuthenticationProcessing
 
     public CustomAuthenticationFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
         super(new AntPathRequestMatcher("/api/login"));
-        setAuthenticationManager(authenticationManager); // 수정된 부분
+        setAuthenticationManager(authenticationManager);
         this.jwtUtil = jwtUtil;
         this.tokenBlacklistService = tokenBlacklistService;
     }
@@ -39,7 +36,7 @@ public class CustomAuthenticationFilter extends AbstractAuthenticationProcessing
 
         // JWT 토큰이 있는지 확인
         String token = jwtUtil.resolveToken(request);
-        if (token != null && jwtUtil.validateToken(token) && tokenBlacklistService.isBlacklisted(token)) {
+        if (token != null && jwtUtil.validateToken(token) && !tokenBlacklistService.isBlacklisted(token)) {
             // JWT 토큰이 유효하고 블랙리스트에 없는 경우
             SecurityContextHolder.getContext().setAuthentication(jwtUtil.getAuthentication(token));
             return SecurityContextHolder.getContext().getAuthentication();
@@ -72,29 +69,6 @@ public class CustomAuthenticationFilter extends AbstractAuthenticationProcessing
     private boolean isPost(HttpServletRequest request) {
         return "POST".equals(request.getMethod());
     }
-
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-                                            Authentication authResult) throws IOException, ServletException {
-        String accessToken = jwtUtil.createAccessToken(authResult.getName(), authResult.getAuthorities().toString());
-        String refreshToken = jwtUtil.createRefreshToken();
-
-        tokenBlacklistService.storeRefreshToken(authResult.getName(), refreshToken);
-
-        jwtUtil.addJwtToCookie(accessToken, response);
-        response.setHeader("X-Refresh-Token", refreshToken);
-
-        // 로그인 성공 응답 생성
-        response.setContentType("application/json");
-        LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
-        loginResponseDTO.setAccessToken(accessToken);
-        loginResponseDTO.setRefreshToken(refreshToken);
-        loginResponseDTO.setMessage("Login successful! Welcome, " + authResult.getName() + "!");
-
-        PrintWriter writer = response.getWriter();
-        writer.print(objectMapper.writeValueAsString(loginResponseDTO));
-        writer.flush();
-    }
-
 
     @Data
     public static class AccountDto {

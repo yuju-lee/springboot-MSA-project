@@ -8,14 +8,14 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class TokenBlacklistService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
-    public TokenBlacklistService(RedisTemplate<String, Object> redisTemplate) {
+    public TokenBlacklistService(RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     public void addToBlacklist(String token) {
-        redisTemplate.opsForValue().set(token, true);
+        redisTemplate.opsForValue().set(token, String.valueOf(true));
         redisTemplate.expire(token, 1, TimeUnit.HOURS); // 토큰의 유효 기간 동안만 블랙리스트에 존재
     }
 
@@ -28,5 +28,5 @@ public class TokenBlacklistService {
         redisTemplate.opsForValue().set(key, refreshToken);
         redisTemplate.expire(key, 1, TimeUnit.DAYS); // Refresh Token의 유효 기간 설정
     }
-    }
 }
+

@@ -1,3 +1,62 @@
+#version: '3.8'
+#services:
+#  db:
+#    image: mysql:8.0
+#    container_name: mysql_container
+#    environment:
+#      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+#      MYSQL_DATABASE: ${MYSQL_DATABASE}
+#      MYSQL_USER: ${MYSQL_USER}
+#      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+#    ports:
+#      - "3307:3306"
+#    volumes:
+#      - ./mysql_data:/var/lib/mysql  # 데이터가 영구적으로 저장될 볼륨
+#      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+#    healthcheck:
+#      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
+#
+#  redis:
+#    image: redis:latest
+#    container_name: redis_container
+#    ports:
+#      - "6379:6379"
+#    healthcheck:
+#      test: ["CMD", "redis-cli", "ping"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
+
+#  app:
+#    image: springboot_proj
+#    container_name: spring-app-container
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    environment:
+#      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+#      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+#      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+#      SPRING_REDIS_HOST: ${SPRING_REDIS_HOST}
+#      SPRING_REDIS_PORT: ${SPRING_REDIS_PORT}
+#    ports:
+#      - "8080:8080"
+#    volumes:
+#      - ./src:/app/src  # 소스 코드 디렉토리를 Docker 볼륨으로 마운트
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#
+#volumes:
+#  mysql_data:
+#    external: true  # 이 볼륨을 외부에서 관리하도록 설정 (이미 존재하는 경우를 대비)
+
+
 version: '3.8'
 services:
   db:
@@ -29,28 +88,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-
-  app:
-    image: springboot_proj
-    container_name: spring-app-container
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      SPRING_REDIS_HOST: ${SPRING_REDIS_HOST}
-      SPRING_REDIS_PORT: ${SPRING_REDIS_PORT}
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./src:/app/src  # 소스 코드 디렉토리를 Docker 볼륨으로 마운트
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
 volumes:
   mysql_data:

@@ -34,8 +34,10 @@ public class JwtUtil {
     // Token 식별자
     public static final String BEARER_PREFIX = "Bearer ";
 
-    @Value("${jwt.secret.key}") // Base64 Encode 한 SecretKey
+    // 여기 일단 하드코딩으로 넣고 나중에 환경변수 설정하기
+    @Value("${jwt_secret_key}") // Base64 Encode 한 SecretKey
     private String secretKey;
+
     private Key key;
     private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
