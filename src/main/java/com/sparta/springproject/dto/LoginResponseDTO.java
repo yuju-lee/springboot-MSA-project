@@ -12,19 +12,10 @@ public class LoginResponseDTO {
     private String refreshToken;
     private String message;
 
-    // 생성자, getter/setter 메서드 등 필요한 코드 추가
-
-    public void setAccessToken(String accessToken) {
+    public LoginResponseDTO(String accessToken, String refreshToken, String message) {
         this.accessToken = accessToken;
-    }
-
-
-    public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
-    }
-
-
-    public void setMessage(String message) {
         this.message = message;
     }
+
 }

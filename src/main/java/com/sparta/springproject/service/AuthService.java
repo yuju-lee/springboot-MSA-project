@@ -60,10 +60,10 @@ public class AuthService {
         res.addHeader("X-Refresh-Token", refreshToken);
 
         // 로그인 성공 응답에 발급받은 토큰들 추가
-        LoginResponseDTO responseDTO = new LoginResponseDTO();
+        LoginResponseDTO responseDTO = new LoginResponseDTO(accessToken, refreshToken, memberEntity.getEmail());
         responseDTO.setAccessToken(accessToken);
         responseDTO.setRefreshToken(refreshToken);
-        responseDTO.setMessage("Login successful! Welcome, " + memberEntity.getUserName() + "!");
+        responseDTO.setMessage("Login successful! Welcome, " + memberEntity.getEmail() + "!");
 
         return ResponseEntity.ok(responseDTO);
     }

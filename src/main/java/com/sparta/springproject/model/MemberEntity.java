@@ -1,26 +1,20 @@
 package com.sparta.springproject.model;
 
-import lombok.NoArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.data.redis.core.RedisHash;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+
 @Entity
 @Table(name = "members")
-@RedisHash("members")
 @Getter
 @Setter
-@NoArgsConstructor // 기본 생성자 추가
-public class MemberEntity {
+public class MemberEntity implements UserDetails {
 
     @Id // 주요 키(primary key) 설정
     @Column(name = "email")
@@ -39,9 +33,37 @@ public class MemberEntity {
     private String address;
 
     @Column(name = "role")
-    private String role = "ROLE_USER";
+    private String role;
 
+
+    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(role)); // 사용자의 역할을 기반으로 권한 부여
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")); // 역할 설정
+    }
+
+    @Override
+    public String getUsername() {
+        return userName;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }
+
