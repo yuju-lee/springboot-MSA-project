@@ -1,7 +1,7 @@
 package com.sparta.springproject.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sparta.springproject.model.Member;
+import com.sparta.springproject.model.MemberEntity;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -24,11 +24,11 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
 
-        Member user = (Member) authentication.getPrincipal();
+        MemberEntity memberEntity = (MemberEntity) authentication.getPrincipal();
 
         response.setStatus(HttpStatus.OK.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        objectMapper.writeValue(response.getWriter(), user);
+        objectMapper.writeValue(response.getWriter(), memberEntity);
     }
 }

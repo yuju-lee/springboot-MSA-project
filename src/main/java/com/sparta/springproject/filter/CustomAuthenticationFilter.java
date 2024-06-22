@@ -1,63 +1,104 @@
 package com.sparta.springproject.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sparta.springproject.dto.LoginResponseDTO;
 import com.sparta.springproject.jwt.CustomAuthenticationToken;
+import com.sparta.springproject.jwt.JwtUtil;
+import com.sparta.springproject.service.TokenBlacklistService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public class CustomAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public CustomAuthenticationFilter() {
-        // url과 일치할 경우 해당 필터 동작
+    public CustomAuthenticationFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
         super(new AntPathRequestMatcher("/api/login"));
+        setAuthenticationManager(authenticationManager); // 수정된 부분
+        this.jwtUtil = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
+
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
-            throws AuthenticationException, IOException, ServletException, IOException {
+            throws AuthenticationException, IOException {
+
+        // JWT 토큰이 있는지 확인
+        String token = jwtUtil.resolveToken(request);
+        if (token != null && jwtUtil.validateToken(token) && tokenBlacklistService.isBlacklisted(token)) {
+            // JWT 토큰이 유효하고 블랙리스트에 없는 경우
+            SecurityContextHolder.getContext().setAuthentication(jwtUtil.getAuthentication(token));
+            return SecurityContextHolder.getContext().getAuthentication();
+        }
 
         // 해당 요청이 POST 인지 확인
-        if(!isPost(request)) {
+        if (!isPost(request)) {
             throw new IllegalStateException("Authentication is not supported");
         }
 
-        // POST 이면 body 를 AccountDto( 로그인 정보 DTO ) 에 매핑
+        // POST일 경우 body 를 AccountDto(로그인 정보 DTO) 에 매핑
         AccountDto accountDto = objectMapper.readValue(request.getReader(), AccountDto.class);
 
         // ID, PASSWORD 가 있는지 확인
-        if(!StringUtils.hasLength(accountDto.getUsername())
+        if (!StringUtils.hasLength(accountDto.getEmail())
                 || !StringUtils.hasLength(accountDto.getPassword())) {
             throw new IllegalArgumentException("username or password is empty");
         }
 
         // 처음에는 인증 되지 않은 토큰 생성
-        CustomAuthenticationToken token = new CustomAuthenticationToken(
-                accountDto.getUsername(),
+        CustomAuthenticationToken authRequest = new CustomAuthenticationToken(
+                accountDto.getEmail(),
                 accountDto.getPassword()
         );
 
         // Manager 에게 인증 처리
-        return getAuthenticationManager().authenticate(token);
+        return getAuthenticationManager().authenticate(authRequest);
     }
 
     private boolean isPost(HttpServletRequest request) {
         return "POST".equals(request.getMethod());
     }
 
-    @Data
-    public static class AccountDto {
-        private String username;
-        private String password;
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+                                            Authentication authResult) throws IOException, ServletException {
+        String accessToken = jwtUtil.createAccessToken(authResult.getName(), authResult.getAuthorities().toString());
+        String refreshToken = jwtUtil.createRefreshToken();
+
+        tokenBlacklistService.storeRefreshToken(authResult.getName(), refreshToken);
+
+        jwtUtil.addJwtToCookie(accessToken, response);
+        response.setHeader("X-Refresh-Token", refreshToken);
+
+        // 로그인 성공 응답 생성
+        response.setContentType("application/json");
+        LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
+        loginResponseDTO.setAccessToken(accessToken);
+        loginResponseDTO.setRefreshToken(refreshToken);
+        loginResponseDTO.setMessage("Login successful! Welcome, " + authResult.getName() + "!");
+
+        PrintWriter writer = response.getWriter();
+        writer.print(objectMapper.writeValueAsString(loginResponseDTO));
+        writer.flush();
     }
 
+
+    @Data
+    public static class AccountDto {
+        private String email;
+        private String password;
+    }
 }
