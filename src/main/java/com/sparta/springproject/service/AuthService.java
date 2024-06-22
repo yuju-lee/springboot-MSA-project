@@ -1,50 +1,78 @@
 package com.sparta.springproject.service;
 
 import com.sparta.springproject.dto.LoginRequestDTO;
+import com.sparta.springproject.dto.LoginResponseDTO;
 import com.sparta.springproject.jwt.JwtUtil;
-import com.sparta.springproject.model.Member;
+import com.sparta.springproject.model.MemberEntity;
 import com.sparta.springproject.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 public class AuthService {
 
-    @Autowired
-    private MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final TokenService tokenService;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService, TokenService tokenService) {
+        this.memberRepository = memberRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
+        this.tokenService = tokenService;
+    }
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private TokenBlacklistService tokenBlacklistService;
-
-    public void login(LoginRequestDTO requestDto, HttpServletResponse res) {
+    public ResponseEntity<LoginResponseDTO> login(LoginRequestDTO requestDto, HttpServletResponse res) {
         String email = requestDto.getEmail();
         String password = requestDto.getPassword();
 
-        Member member = memberRepository.findByEmail(email).orElseThrow(
-                () -> new IllegalArgumentException("Not registered - Please try again")
-        );
+        // 이메일로 회원 조회
+        MemberEntity memberEntity = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Not registered - Please try again"));
 
-        if (!passwordEncoder.matches(password, member.getPassword())) {
-            throw new IllegalArgumentException("Invalid username or password.");
+        // 비밀번호 검증
+        if (!passwordEncoder.matches(password, memberEntity.getPassword())) {
+            throw new IllegalArgumentException("Invalid password.");
         }
 
-        String token = jwtUtil.createToken(member.getEmail(), member.getRole());
-        jwtUtil.addJwtToCookie(token, res);
+        // Access Token 및 Refresh Token 생성
+        String accessToken = jwtUtil.createAccessToken(memberEntity.getEmail(), memberEntity.getRole());
+        String refreshToken = jwtUtil.createRefreshToken();
+
+        // Refresh Token 저장 (Redis에 저장되어야 함)
+        tokenService.storeRefreshToken(memberEntity.getEmail(), refreshToken);
+
+        // 엑세스 토큰을 쿠키에 추가
+        jwtUtil.addJwtToCookie(accessToken, res);
+        jwtUtil.addJwtToCookie(refreshToken, res);
+
+        // Refresh Token을 응답 헤더에 추가
+        res.addHeader("X-Refresh-Token", refreshToken);
+
+        // 로그인 성공 응답에 발급받은 토큰들 추가
+        LoginResponseDTO responseDTO = new LoginResponseDTO();
+        responseDTO.setAccessToken(accessToken);
+        responseDTO.setRefreshToken(refreshToken);
+        responseDTO.setMessage("Login successful! Welcome, " + memberEntity.getUserName() + "!");
+
+        return ResponseEntity.ok(responseDTO);
     }
 
-    public ResponseEntity<String> logout(String token) {
+    public void logout(String accessToken) {
+        String token = accessToken.replace(JwtUtil.BEARER_PREFIX, "");
         tokenBlacklistService.addToBlacklist(token);
-        return ResponseEntity.ok("Logout successful! Token: " + token);
+
+        String username = jwtUtil.getUserInfoFromToken(token).getSubject();
+        tokenService.deleteRefreshToken(username);
     }
 }

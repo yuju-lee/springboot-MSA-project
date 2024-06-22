@@ -20,5 +20,8 @@ public class MemberDTO {
     @NotEmpty(message = "Password cannot be empty")
     private String password;
 
+    private String role="ROLE_USER";
+
+
     // Getters and Setters
 }

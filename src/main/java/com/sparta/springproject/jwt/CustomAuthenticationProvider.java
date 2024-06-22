@@ -1,12 +1,13 @@
 package com.sparta.springproject.jwt;
 
-import com.sparta.springproject.model.Member;
+import com.sparta.springproject.model.MemberEntity;
+import com.sparta.springproject.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -14,22 +15,22 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
-    private final UserDetailsService userDetailsService;
+    private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-
         String loginId = authentication.getName();
         String password = (String) authentication.getCredentials();
 
-        Member member = (Member) userDetailsService.loadUserByUsername(loginId);
+        MemberEntity memberEntity = memberRepository.findByEmail(loginId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + loginId));
 
-        if(!passwordEncoder.matches(password, member.getPassword())) {
+        if (!passwordEncoder.matches(password, memberEntity.getPassword())) {
             throw new BadCredentialsException("Invalid Password");
         }
 
-        return new CustomAuthenticationToken(member, null, member.getAuthorities());
+        return new CustomAuthenticationToken(memberEntity, null, memberEntity.getAuthorities());
     }
 
     @Override
