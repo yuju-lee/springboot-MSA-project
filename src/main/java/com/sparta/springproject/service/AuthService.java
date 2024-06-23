@@ -41,6 +41,7 @@ public class AuthService {
     public ResponseEntity<LoginResponseDTO> login(LoginRequestDTO requestDto, HttpServletResponse res) {
         String email = requestDto.getEmail();
         String password = requestDto.getPassword();
+        log.info(email);
 
         try {
             // 이메일로 회원 조회
