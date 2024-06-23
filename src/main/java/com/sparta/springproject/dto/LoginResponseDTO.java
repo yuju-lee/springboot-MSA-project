@@ -18,4 +18,7 @@ public class LoginResponseDTO {
         this.message = message;
     }
 
+    public LoginResponseDTO(String message) {
+        this.message = message;
+    }
 }
