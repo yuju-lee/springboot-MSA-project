@@ -69,7 +69,7 @@ public class MemberService {
 
     public void updatePassword(String accessToken, UpdatePasswordDTO updatePasswordDTO) {
         String token = accessToken.replace(JwtUtil.BEARER_PREFIX, "");
-        String email = jwtUtil.getUserInfoFromToken(token).getSubject();
+        String email = jwtUtil.getUserInfoFromToken(token).getSubject(); // 토큰에서 이메일 추출
         log.info(email);
 
         MemberEntity memberEntity = memberRepository.findByEmail(email).orElseThrow(
