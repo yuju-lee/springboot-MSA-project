@@ -4,12 +4,10 @@ import com.sparta.springproject.filter.JwtAuthenticationEntryPoint;
 import com.sparta.springproject.handler.JwtAccessDeniedHandler;
 import com.sparta.springproject.jwt.JwtFilter;
 import com.sparta.springproject.jwt.JwtTokenProvider;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,13 +17,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig {
 
     private final JwtTokenProvider tokenProvider;
+    private final ApplicationContext applicationContext;
 
-    public SecurityConfig(JwtTokenProvider tokenProvider) {
+    public SecurityConfig(JwtTokenProvider tokenProvider, ApplicationContext applicationContext) {
         this.tokenProvider = tokenProvider;
+        this.applicationContext = applicationContext;
     }
 
     @Bean
@@ -35,26 +34,26 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        JwtFilter jwtFilter = new JwtFilter(tokenProvider);
+        jwtFilter.setApplicationContext(applicationContext);
+
         http
                 .cors(withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 상태 Stateless 설정
-                .httpBasic(withDefaults()) // HTTP Basic 인증 설정 기본값 적용
+                .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .httpBasic(withDefaults())
                 .exceptionHandling(exceptionHandling ->
                         exceptionHandling
-                                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()) // 인증 진입점
-                                .accessDeniedHandler(new JwtAccessDeniedHandler()) // 접근 거부 핸들러
+                                .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+                                .accessDeniedHandler(new JwtAccessDeniedHandler())
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/", "/api/login", "/api/signup", "/api/update-password").permitAll() // 특정 엔드포인트는 인증 없이 접근 허용
-                                .requestMatchers("/api/update-password").authenticated() // 패스워드 변경 엔드포인트는 인증 필요
-                                .anyRequest().authenticated() // 그외는 전부 인증 필요
-
+                                .requestMatchers("/", "/api/login", "/api/signup").permitAll()
+                                .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
-
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);  // JwtFilter를 직접 인스턴스화하여 추가
 
         return http.build();
     }
