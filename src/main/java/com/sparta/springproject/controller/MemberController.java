@@ -44,18 +44,9 @@ public class MemberController {
     }
 
     @PutMapping("/update-password")
-    public ResponseEntity<?> updatePassword(@RequestBody UpdatePasswordDTO updatePasswordDTO) {
-        try {
-            // Get currently logged in user's username from security context
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-            memberService.updatePassword(username, updatePasswordDTO.getCurrentPassword(), updatePasswordDTO.getNewPassword());
-
-            return ResponseEntity.ok("Password updated successfully");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<String> updatePassword(@RequestHeader("Authorization") String accessToken, @RequestBody UpdatePasswordDTO updatePasswordDTO) {
+        memberService.updatePassword(accessToken, updatePasswordDTO);
+        return ResponseEntity.ok("Password updated successfully.");
     }
-
 
 }

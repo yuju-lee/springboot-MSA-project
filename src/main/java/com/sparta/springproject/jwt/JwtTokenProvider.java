@@ -1,14 +1,18 @@
 package com.sparta.springproject.jwt;
 
+import com.sparta.springproject.service.AuthService;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
 import java.util.Date;
 
 @Component
@@ -17,10 +21,10 @@ public class JwtTokenProvider {
 
     @Value("${jwt_secret_key}")
     private String secretKey;
-    private Key key;
 
     private long accessTokenValidityInMilliseconds;
     private long refreshTokenValidityInMilliseconds;
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     @PostConstruct
     protected void init() {
@@ -60,16 +64,22 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("Invalid or expired JWT token", e);
             return false;
         }
     }
 
     public String getEmailFromToken(String token) {
-        Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
-        return claims.getSubject();
+        try {
+            Claims claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
+            return claims.getSubject();
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("Failed to get email from token", e);
+            return null;
+        }
     }
 
 }

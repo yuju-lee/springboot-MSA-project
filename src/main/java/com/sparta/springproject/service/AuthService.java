@@ -22,17 +22,15 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final TokenBlacklistService tokenBlacklistService;
     private final TokenService tokenService;
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
 
     @Autowired
-    public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService, TokenService tokenService) {
+    public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenService tokenService) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
-        this.tokenBlacklistService = tokenBlacklistService;
         this.tokenService = tokenService;
     }
 
@@ -60,8 +58,8 @@ public class AuthService {
 
 
             // Refresh Token을 응답 헤더에 추가
-            res.addHeader("X-Refresh-Token", refreshToken);
-            res.addHeader("X-Access-Token", accessToken);
+            res.addHeader("RefreshToken", refreshToken);
+            res.addHeader("AccessToken", accessToken);
 
 
             // 로그인 성공 응답에 발급받은 토큰들 추가
@@ -78,7 +76,6 @@ public class AuthService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseDTO);
         }
     }
-
 
     public void logout(String accessToken) {
         String token = accessToken.replace(JwtUtil.BEARER_PREFIX, "");

@@ -32,7 +32,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh-token")
-    public void refreshToken(@RequestHeader("Authorization") String accessToken, @RequestHeader("X-Refresh-Token") String refreshToken, HttpServletResponse res) {
+    public void refreshToken(@RequestHeader("Authorization") String accessToken, @RequestHeader("RefreshToken") String refreshToken, HttpServletResponse res) {
         String token = accessToken.replace(JwtUtil.BEARER_PREFIX, "");
         String username = jwtUtil.getUserInfoFromToken(token).getSubject();
 
@@ -43,7 +43,7 @@ public class AuthController {
             tokenService.storeRefreshToken(username, newRefreshToken);
 
             jwtUtil.addJwtToCookie(newAccessToken, res);
-            res.addHeader("X-Refresh-Token", newRefreshToken);
+            res.addHeader("RefreshToken", newRefreshToken);
         } else {
             throw new IllegalArgumentException("Invalid refresh token or access token.");
         }
