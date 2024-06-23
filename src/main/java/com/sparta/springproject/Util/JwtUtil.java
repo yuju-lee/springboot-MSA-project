@@ -1,4 +1,4 @@
-package com.sparta.springproject.jwt;
+package com.sparta.springproject.Util;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -8,15 +8,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -24,6 +24,7 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class JwtUtil {
@@ -34,15 +35,22 @@ public class JwtUtil {
     // Token 식별자
     public static final String BEARER_PREFIX = "Bearer ";
 
-    // 여기 일단 하드코딩으로 넣고 나중에 환경변수 설정하기
     @Value("${jwt_secret_key}") // Base64 Encode 한 SecretKey
     private String secretKey;
 
     private Key key;
     private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-
+    private final RedisUtil redisUtil;
     // 로그 설정
     public static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
+    private final RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+
+    public JwtUtil(RedisUtil redisUtil, RedisTemplate<String, String> redisTemplate) {
+        this.redisUtil = redisUtil;
+        this.redisTemplate = redisTemplate;
+    }
 
     @PostConstruct
     public void init() {
@@ -122,5 +130,28 @@ public class JwtUtil {
         }
         return null;
     }
+
+    // Access Token을 블랙리스트에 추가하는 메서드
+    public void addToBlacklist(String token) {
+        long expirationTime = getExpiration(token).getTime() - System.currentTimeMillis();
+        redisTemplate.opsForValue().set(token, "blacklisted", expirationTime, TimeUnit.MILLISECONDS);
+    }
+
+    // 토큰이 블랙리스트에 있는지 검사하는 메서드
+    public boolean validateTokenConsideringBlacklist(String token) {
+        return validateToken(token) && !isBlacklisted(token);
+    }
+
+    // 토큰이 블랙리스트에 있는지 확인하는 메서드
+    private boolean isBlacklisted(String token) {
+        return Boolean.TRUE.equals(redisTemplate.hasKey(token));
+    }
+
+    // 토큰의 만료 시간 가져오기
+    public Date getExpiration(String token) {
+        Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        return claims.getExpiration();
+    }
+
 
 }

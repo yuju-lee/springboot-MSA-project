@@ -1,20 +1,13 @@
 package com.sparta.springproject.controller;
 
 import com.sparta.springproject.dto.LoginRequestDTO;
-import com.sparta.springproject.dto.LoginResponseDTO;
-import com.sparta.springproject.dto.MemberDTO;
-import com.sparta.springproject.jwt.AuthResponse;
-import com.sparta.springproject.jwt.JwtTokenProvider;
-import com.sparta.springproject.jwt.JwtUtil;
-import com.sparta.springproject.model.MemberEntity;
-import com.sparta.springproject.repository.MemberRepository;
+import com.sparta.springproject.Util.JwtUtil;
 import com.sparta.springproject.service.AuthService;
-import com.sparta.springproject.service.MemberService;
 import com.sparta.springproject.service.TokenService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -33,8 +26,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestParam("refreshToken") String refreshToken) {
-            authService.logout(refreshToken);
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String accessToken) {
+        authService.logout(accessToken);
         return ResponseEntity.ok("Logout successful");
     }
 

@@ -2,14 +2,16 @@ package com.sparta.springproject.controller;
 
 import com.sparta.springproject.dto.MemberDTO;
 import com.sparta.springproject.dto.UpdatePasswordDTO;
-import com.sparta.springproject.jwt.JwtUtil;
+import com.sparta.springproject.Util.JwtUtil;
 import com.sparta.springproject.model.MemberEntity;
 import com.sparta.springproject.repository.MemberRepository;
 import com.sparta.springproject.service.AuthService;
 import com.sparta.springproject.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.sparta.springproject.service.TokenService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,26 +19,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class MemberController {
 
-    private final MemberRepository memberRepository;
-    private final PasswordEncoder passwordEncoder;
     private final MemberService memberService;
-    private final AuthService authService;
-    private final JwtUtil jwtUtil;
-    private final TokenService tokenService;
 
     @Autowired
-    public MemberController(MemberRepository memberRepository, PasswordEncoder passwordEncoder, MemberService memberService, AuthService authService, JwtUtil jwtUtil, TokenService tokenService) {
-
-        this.memberRepository = memberRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-
+    public MemberController( MemberService memberService) {
         this.memberService = memberService;
-        this.authService = authService;
-        this.tokenService = tokenService;
-
     }
-
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody MemberDTO memberDTO) {
@@ -56,20 +44,18 @@ public class MemberController {
     }
 
     @PutMapping("/update-password")
-    public void updatePassword(@RequestHeader("Authorization") String accessToken, @RequestBody UpdatePasswordDTO updatePasswordDTO) {
-        String token = accessToken.replace(JwtUtil.BEARER_PREFIX, "");
-        String username = jwtUtil.getUserInfoFromToken(token).getSubject();
+    public ResponseEntity<?> updatePassword(@RequestBody UpdatePasswordDTO updatePasswordDTO) {
+        try {
+            // Get currently logged in user's username from security context
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        MemberEntity memberEntity = memberRepository.findByEmail(username).orElseThrow(
-                () -> new IllegalArgumentException("User not found!")
-        );
+            memberService.updatePassword(username, updatePasswordDTO.getCurrentPassword(), updatePasswordDTO.getNewPassword());
 
-        if (!passwordEncoder.matches(updatePasswordDTO.getCurrentPassword(), memberEntity.getPassword())) {
-            throw new IllegalArgumentException("Invalid current password.");
+            return ResponseEntity.ok("Password updated successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-
-        memberEntity.setPassword(passwordEncoder.encode(updatePasswordDTO.getNewPassword()));
-        memberRepository.save(memberEntity);
     }
+
 
 }

@@ -3,6 +3,7 @@ package com.sparta.springproject.service;
 import com.sparta.springproject.dto.MemberDTO;
 import com.sparta.springproject.model.MemberEntity;
 import com.sparta.springproject.repository.MemberRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,5 +53,27 @@ public class MemberService {
         } catch (DataIntegrityViolationException e) {
             throw new IllegalArgumentException("Error. Please try again.");
         }
+    }
+
+    // 메서드 실행을 트랜잭션으로 묶기
+    @Transactional
+    public void updatePassword(String username, String currentPassword, String newPassword) {
+        MemberEntity memberEntity = memberRepository.findByEmail(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found!"));
+
+        if (!passwordEncoder.matches(currentPassword, memberEntity.getPassword())) {
+            throw new IllegalArgumentException("Invalid current password.");
+        }
+
+        if (newPassword == null || newPassword.isEmpty()) {
+            throw new IllegalArgumentException("New password cannot be empty.");
+        }
+
+        if (newPassword.length() < 8) {
+            throw new IllegalArgumentException("New password must be at least 8 characters long.");
+        }
+
+        memberEntity.setPassword(passwordEncoder.encode(newPassword));
+        memberRepository.save(memberEntity);
     }
 }
