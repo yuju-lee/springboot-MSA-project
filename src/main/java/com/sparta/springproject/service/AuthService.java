@@ -2,17 +2,15 @@ package com.sparta.springproject.service;
 
 import com.sparta.springproject.dto.LoginRequestDTO;
 import com.sparta.springproject.dto.LoginResponseDTO;
-import com.sparta.springproject.jwt.JwtUtil;
+import com.sparta.springproject.Util.JwtUtil;
 import com.sparta.springproject.model.MemberEntity;
 import com.sparta.springproject.repository.MemberRepository;
-import org.apache.commons.logging.Log;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +36,7 @@ public class AuthService {
         this.tokenService = tokenService;
     }
 
-    public ResponseEntity<LoginResponseDTO> login(LoginRequestDTO requestDto, HttpServletResponse res) {
+    public ResponseEntity<LoginResponseDTO>login(LoginRequestDTO requestDto, HttpServletResponse res) {
         String email = requestDto.getEmail();
         String password = requestDto.getPassword();
         log.info(email);
@@ -60,12 +58,11 @@ public class AuthService {
             // Refresh Token 저장 (Redis에 저장되어야 함)
             tokenService.storeRefreshToken(memberEntity.getEmail(), refreshToken);
 
-            // 엑세스 토큰을 쿠키에 추가
-            jwtUtil.addJwtToCookie(accessToken, res);
-            jwtUtil.addJwtToCookie(refreshToken, res);
 
             // Refresh Token을 응답 헤더에 추가
             res.addHeader("X-Refresh-Token", refreshToken);
+            res.addHeader("X-Access-Token", accessToken);
+
 
             // 로그인 성공 응답에 발급받은 토큰들 추가
             LoginResponseDTO responseDTO = new LoginResponseDTO(accessToken, refreshToken, memberEntity.getEmail());
@@ -85,9 +82,10 @@ public class AuthService {
 
     public void logout(String accessToken) {
         String token = accessToken.replace(JwtUtil.BEARER_PREFIX, "");
-        tokenBlacklistService.addToBlacklist(token);
-
-        String username = jwtUtil.getUserInfoFromToken(token).getSubject();
-        tokenService.deleteRefreshToken(username);
+        if (jwtUtil.validateTokenConsideringBlacklist(token)) {
+            tokenService.addToBlacklist(accessToken);
+        } else {
+            throw new IllegalArgumentException("Invalid or expired JWT token.");
+        }
     }
 }

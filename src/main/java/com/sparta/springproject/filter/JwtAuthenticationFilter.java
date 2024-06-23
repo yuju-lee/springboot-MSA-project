@@ -1,7 +1,6 @@
 package com.sparta.springproject.filter;
 
-import com.sparta.springproject.dto.LoginResponseDTO;
-import com.sparta.springproject.jwt.JwtUtil;
+import com.sparta.springproject.Util.JwtUtil;
 import com.sparta.springproject.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,7 +11,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

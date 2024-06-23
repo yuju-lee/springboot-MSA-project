@@ -2,7 +2,7 @@ package com.sparta.springproject.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.springproject.jwt.CustomAuthenticationToken;
-import com.sparta.springproject.jwt.JwtUtil;
+import com.sparta.springproject.Util.JwtUtil;
 import com.sparta.springproject.service.TokenBlacklistService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
