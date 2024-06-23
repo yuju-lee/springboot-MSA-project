@@ -143,8 +143,9 @@ public class JwtUtil {
     }
 
     // 토큰이 블랙리스트에 있는지 확인하는 메서드
-    private boolean isBlacklisted(String token) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(token));
+    public boolean isBlacklisted(String token) {
+        String value = redisTemplate.opsForValue().get(token);
+        return "blacklisted".equals(value);
     }
 
     // 토큰의 만료 시간 가져오기

@@ -1,13 +1,9 @@
 package com.sparta.springproject.config;
 
-import com.sparta.springproject.config.JwtSecurityConfig;
 import com.sparta.springproject.filter.JwtAuthenticationEntryPoint;
 import com.sparta.springproject.handler.JwtAccessDeniedHandler;
-import com.sparta.springproject.jwt.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -23,41 +19,34 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtTokenProvider tokenProvider;
 
-    public SecurityConfig(JwtTokenProvider tokenProvider) {
-        this.tokenProvider = tokenProvider;
+    public SecurityConfig() {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .headers((headerConfig) -> headerConfig.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(withDefaults())
-                .exceptionHandling((exceptionConfig) ->
-                        exceptionConfig
+                .exceptionHandling(exceptionHandling ->
+                        exceptionHandling
                                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
                                 .accessDeniedHandler(new JwtAccessDeniedHandler())
                 )
-                .authorizeHttpRequests((authorizeRequests) ->
+                .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/", "/api/login", "api/logout", "/api/signup").permitAll()
+                                .requestMatchers("/", "/api/login", "/api/signup", "/api/update-password").permitAll()
                                 .anyRequest().authenticated()
-                )
-                .apply(new JwtSecurityConfig(tokenProvider));
-        return http.build();
-    }
+                );
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+        return http.build();
     }
 }
