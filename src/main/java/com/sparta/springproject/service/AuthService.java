@@ -5,6 +5,9 @@ import com.sparta.springproject.dto.LoginResponseDTO;
 import com.sparta.springproject.jwt.JwtUtil;
 import com.sparta.springproject.model.MemberEntity;
 import com.sparta.springproject.repository.MemberRepository;
+import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +25,8 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
     private final TokenService tokenService;
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
 
     @Autowired
     public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService, TokenService tokenService) {
@@ -38,10 +43,14 @@ public class AuthService {
 
         // 이메일로 회원 조회
         MemberEntity memberEntity = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Not registered - Please try again"));
+                .orElseThrow(() -> {
+                    log.error("User not found with email: {}");
+                    return new IllegalArgumentException("Not registered - Please try again");
+                });
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(password, memberEntity.getPassword())) {
+            log.error("Invalid password for user: {}");
             throw new IllegalArgumentException("Invalid password.");
         }
 
