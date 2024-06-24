@@ -50,7 +50,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/", "/api/login", "/api/signup").permitAll()
+                                .requestMatchers("/", "/api/login", "/api/signup", "/api/products", "/api/products/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);  // JwtFilter를 직접 인스턴스화하여 추가

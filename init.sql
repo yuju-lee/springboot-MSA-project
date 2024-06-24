@@ -7,3 +7,10 @@ CREATE TABLE IF NOT EXISTS members (
                                        role VARCHAR(255),
                                        PRIMARY KEY (email)
 );
+CREATE TABLE `Products` (
+                            `productID` INT AUTO_INCREMENT PRIMARY KEY,
+                            `productName` VARCHAR(255),
+                            `price` INT,
+                            `stock` INT,
+                            `likecount` INT
+);
