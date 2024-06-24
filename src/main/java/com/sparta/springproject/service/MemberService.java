@@ -22,13 +22,11 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
-    private final JwtTokenProvider jwtTokenProvider;
 
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, JwtTokenProvider jwtTokenProvider) {
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
-        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     public Optional<MemberEntity> findByEmail(String email) {

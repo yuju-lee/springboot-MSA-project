@@ -25,7 +25,7 @@ public class JwtFilter extends OncePerRequestFilter implements ApplicationContex
     private final JwtTokenProvider jwtTokenProvider;
     private ApplicationContext applicationContext;
 
-    private static final String[] EXCLUDED_PATHS = {"/api/login", "/api/signup"};
+    private static final String[] EXCLUDED_PATHS = {"/api/login", "/api/signup", "/api/products", "/api/products/**"};
 
     public JwtFilter(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
