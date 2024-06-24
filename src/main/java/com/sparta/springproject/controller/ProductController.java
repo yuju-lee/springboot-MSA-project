@@ -1,15 +1,20 @@
 package com.sparta.springproject.controller;
 
+import com.sparta.springproject.Util.JwtUtil;
+import com.sparta.springproject.dto.LikeRequestDTO;
+import com.sparta.springproject.dto.LoginRequestDTO;
 import com.sparta.springproject.dto.ProductDetailDTO;
+import com.sparta.springproject.dto.UpdatePasswordDTO;
+import com.sparta.springproject.model.MemberEntity;
 import com.sparta.springproject.model.ProductEntity;
 import com.sparta.springproject.service.ProductService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.ErrorResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -45,4 +50,12 @@ public class ProductController {
 
         return ResponseEntity.ok(productDetailDTO);
     }
+
+    @PostMapping("/like-product")
+    public ResponseEntity<String> likeProduct(@RequestHeader("Authorization") String accessToken, @RequestBody LikeRequestDTO likeRequest) {
+
+        productService.likeProduct(accessToken, likeRequest);
+        return ResponseEntity.ok("Product liked successfully");
+    }
+
 }
