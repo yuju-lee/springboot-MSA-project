@@ -52,10 +52,9 @@ public class ProductController {
     }
 
     @PostMapping("/like-product")
-    public ResponseEntity<String> likeProduct(@RequestHeader("Authorization") String accessToken, @RequestBody LikeRequestDTO likeRequest) {
-
-        productService.likeProduct(accessToken, likeRequest);
-        return ResponseEntity.ok("Product liked successfully");
+    public ResponseEntity<String> likeProduct(@RequestHeader("Authorization") String token, @RequestBody LikeRequestDTO likeRequest) {
+        String message = productService.toggleLikeProduct(token, likeRequest.getProductId());
+        return ResponseEntity.ok(message);
     }
 
 }
