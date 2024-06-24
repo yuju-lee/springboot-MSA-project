@@ -2,17 +2,13 @@ package com.sparta.springproject.controller;
 
 import com.sparta.springproject.dto.MemberDTO;
 import com.sparta.springproject.dto.UpdatePasswordDTO;
-import com.sparta.springproject.Util.JwtUtil;
+import com.sparta.springproject.dto.UpdateProfileDTO;
 import com.sparta.springproject.model.MemberEntity;
-import com.sparta.springproject.repository.MemberRepository;
-import com.sparta.springproject.service.AuthService;
 import com.sparta.springproject.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import com.sparta.springproject.service.TokenService;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -47,6 +43,12 @@ public class MemberController {
     public ResponseEntity<String> updatePassword(@RequestHeader("Authorization") String accessToken, @RequestBody UpdatePasswordDTO updatePasswordDTO) {
         memberService.updatePassword(accessToken, updatePasswordDTO);
         return ResponseEntity.ok("Password updated successfully.");
+    }
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<String> updateProfile(@RequestHeader("Authorization")String accessToken, @RequestBody UpdateProfileDTO updateProfileDTO) {
+        memberService.updateProfile(accessToken, updateProfileDTO);
+        return ResponseEntity.ok("Profile updated successfully");
     }
 
 }

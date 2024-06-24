@@ -3,18 +3,15 @@ package com.sparta.springproject.service;
 import com.sparta.springproject.Util.JwtUtil;
 import com.sparta.springproject.dto.MemberDTO;
 import com.sparta.springproject.dto.UpdatePasswordDTO;
+import com.sparta.springproject.dto.UpdateProfileDTO;
+import com.sparta.springproject.jwt.JwtTokenProvider;
 import com.sparta.springproject.model.MemberEntity;
 import com.sparta.springproject.repository.MemberRepository;
-import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.Optional;
 
@@ -25,11 +22,13 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, JwtTokenProvider jwtTokenProvider) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     public Optional<MemberEntity> findByEmail(String email) {
@@ -70,7 +69,7 @@ public class MemberService {
     public void updatePassword(String accessToken, UpdatePasswordDTO updatePasswordDTO) {
         String token = accessToken.replace(JwtUtil.BEARER_PREFIX, "");
         String email = jwtUtil.getUserInfoFromToken(token).getSubject(); // 토큰에서 이메일 추출
-        log.info(email);
+        log.info("update password for email: {}", email);
 
         MemberEntity memberEntity = memberRepository.findByEmail(email).orElseThrow(
                 () -> new IllegalArgumentException("User not found!")
@@ -81,6 +80,23 @@ public class MemberService {
         }
 
         memberEntity.setPassword(passwordEncoder.encode(updatePasswordDTO.getNewPassword()));
+        memberRepository.save(memberEntity);
+    }
+
+    public void updateProfile(String accessToken, UpdateProfileDTO updateProfileDTO) {
+        String token = accessToken.replace("Bearer ", "");
+        String email = jwtUtil.getUserInfoFromToken(token).getSubject();
+        log.info("update profile for email: {}", email);
+
+        MemberEntity memberEntity = memberRepository.findByEmail(email).orElseThrow(
+                () -> new IllegalArgumentException("User not found!")
+        );
+        if (updateProfileDTO.getAddress() != null) {
+            memberEntity.setAddress(passwordEncoder.encode(updateProfileDTO.getAddress()));
+        }
+        if (updateProfileDTO.getMobileNo() != null) {
+            memberEntity.setPhone(passwordEncoder.encode(updateProfileDTO.getMobileNo()));
+        }
         memberRepository.save(memberEntity);
     }
 }
