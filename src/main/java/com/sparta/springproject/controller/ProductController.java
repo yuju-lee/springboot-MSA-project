@@ -1,13 +1,11 @@
 package com.sparta.springproject.controller;
 
 import com.sparta.springproject.Util.JwtUtil;
-import com.sparta.springproject.dto.LikeRequestDTO;
-import com.sparta.springproject.dto.LoginRequestDTO;
-import com.sparta.springproject.dto.ProductDetailDTO;
-import com.sparta.springproject.dto.UpdatePasswordDTO;
+import com.sparta.springproject.dto.*;
 import com.sparta.springproject.model.MemberEntity;
 import com.sparta.springproject.model.ProductEntity;
 import com.sparta.springproject.service.ProductService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/products")
 public class ProductController {
 
     private final ProductService productService;
@@ -27,8 +25,8 @@ public class ProductController {
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
-
-    @GetMapping("/products")
+    // 상품리스트 조회
+    @GetMapping
     public ResponseEntity<?> getAllProducts() {
         Object response = productService.getAllProducts();
         if (response instanceof ErrorResponse) {
@@ -37,7 +35,7 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/products/{products_id}")
+    @GetMapping("/{products_id}")
     public ResponseEntity<?> getProductById(@PathVariable Integer products_id) {
         ProductEntity product = productService.getProductById(Math.toIntExact(Long.valueOf(products_id)))
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
@@ -51,10 +49,20 @@ public class ProductController {
         return ResponseEntity.ok(productDetailDTO);
     }
 
-    @PostMapping("/like-product")
+    @PostMapping("/like")
     public ResponseEntity<String> likeProduct(@RequestHeader("Authorization") String token, @RequestBody LikeRequestDTO likeRequest) {
         String message = productService.toggleLikeProduct(token, likeRequest.getProductId());
         return ResponseEntity.ok(message);
     }
 
+    @GetMapping("/wishlist")
+    public List<WishListRequestDTO> getWishList(HttpServletRequest request) {
+        return productService.getAllwishProducts(request);
+    }
+
+    @PostMapping("/wishlist")
+    public ResponseEntity<String> addWishProduct(@RequestBody WishListRequestDTO wishListRequestDTO, HttpServletRequest request) {
+        productService.addWishProduct(request, wishListRequestDTO);
+        return ResponseEntity.ok("Product added to wishlist successfully");
+    }
 }
