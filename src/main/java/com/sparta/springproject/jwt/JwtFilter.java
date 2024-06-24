@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -56,7 +57,9 @@ public class JwtFilter extends OncePerRequestFilter implements ApplicationContex
                     Optional<MemberEntity> optionalMember = memberService.findByEmail(email);
                     if (optionalMember.isPresent()) {
                         MemberEntity member = optionalMember.get();
-                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(email, null, member.getAuthorities());
+                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                                new User(email, member.getPassword(), member.getAuthorities()), null, member.getAuthorities()
+                        );
                         auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     } else {
