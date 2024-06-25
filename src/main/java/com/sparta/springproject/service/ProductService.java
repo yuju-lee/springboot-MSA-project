@@ -122,11 +122,13 @@ public class ProductService {
         }
     }
 
-    public void deleteWishProduct(Long productId, String accessToken) {
+    public void deleteWishProduct(String accessToken, Long productId) {
         String token = accessToken.replace(JwtUtil.BEARER_PREFIX, "");
+
         if (!jwtUtil.validateToken(token)) {
             throw new IllegalArgumentException("Invalid or expired token");
         }
+
         String email = jwtUtil.getUserInfoFromToken(token).getSubject();
 
         // 이메일로 회원 정보 조회

@@ -28,8 +28,22 @@ CREATE TABLE IF NOT EXISTS wishlist (
                                      wishid BIGINT AUTO_INCREMENT PRIMARY KEY,
                                      email VARCHAR(255),
                                      productID INT,
-                                     addAt timestamp,
-                                     FOREIGN KEY (email) REFERENCES Members(email),
-                                     FOREIGN KEY (productID) REFERENCES products(productID)
+                                     addAt timestamp
 );
-
+#
+# -- orders 테이블 생성
+# CREATE TABLE orders (
+#                         orderKey INT AUTO_INCREMENT PRIMARY KEY,
+#                         email VARCHAR(255),
+#                         orderStatus VARCHAR(255),
+#                         orderAt TIMESTAMP
+# );
+#
+# -- orderdetail 테이블 생성
+# CREATE TABLE orderdetail (
+#                              orderDetailKey INT AUTO_INCREMENT PRIMARY KEY,
+#                              orderKey INT,
+#                              productID INT,
+#                              orderPrice INT,
+#                              productCount INT
+# );
