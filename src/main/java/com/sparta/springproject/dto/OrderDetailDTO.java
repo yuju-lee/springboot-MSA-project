@@ -1,5 +1,6 @@
 package com.sparta.springproject.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,5 +12,13 @@ public class OrderDetailDTO {
     private Integer orderPrice;
     private Integer productCount;
 
-    // 기타 필드 및 메서드
+    public OrderDetailDTO(Integer productID, Integer orderPrice, Integer productCount) {
+        this.productID = productID;
+        this.orderPrice = orderPrice;
+        this.productCount = productCount;
+    }
+
+    public OrderDetailDTO() {
+
+    }
 }
