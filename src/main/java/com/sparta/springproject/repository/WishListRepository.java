@@ -9,6 +9,5 @@ import java.util.Optional;
 
 public interface WishListRepository extends JpaRepository<WishEntity, Long> {
     List<WishEntity> findByEmail(String email);
-
     Optional<WishEntity> findByProductIdAndEmail(Integer productId, String email);
 }

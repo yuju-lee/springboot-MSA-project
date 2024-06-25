@@ -36,9 +36,32 @@ public class OrderController {
 
     @PostMapping("/order")
     public ResponseEntity<String> createOrder(@RequestHeader("Authorization") String accessToken, @RequestBody OrderRequestDTO orderRequestDTO) {
-        Long orderNumber = Long.valueOf(orderService.createOrder(accessToken, orderRequestDTO));
-        String message = String.format("Order is completed. Order number is: %d", orderNumber);
-        return ResponseEntity.ok(message);
+        try {
+            Integer orderKey = orderService.createOrder(accessToken, orderRequestDTO);
+            return ResponseEntity.ok("Order created successfully. Order number is: " + orderKey);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/order/{orderNo}")
+    public ResponseEntity<String> cancelOrder(@RequestHeader("Authorization") String accessToken, @PathVariable Long orderNo) {
+        try {
+            orderService.deleteOrder(accessToken, orderNo);
+            return ResponseEntity.ok("Order cancellation completed successfully. Order number is: " + orderNo);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/order/return/{orderNo}")
+    public ResponseEntity<String> returnOrder(@RequestHeader("Authorization") String accessToken, @PathVariable Long orderNo) {
+        try {
+            orderService.returnOrder(accessToken, orderNo);
+            return ResponseEntity.ok("Order returned successfully. Order number is: " + orderNo);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 }

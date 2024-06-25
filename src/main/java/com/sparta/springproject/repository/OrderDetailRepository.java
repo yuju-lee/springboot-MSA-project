@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface OrderDetailRepository extends JpaRepository<OrderDetailEntity, Integer> {
     List<OrderDetailEntity> findByOrderKey(Integer orderKey);
+    void deleteByOrderKey(Long orderKey);
 }
