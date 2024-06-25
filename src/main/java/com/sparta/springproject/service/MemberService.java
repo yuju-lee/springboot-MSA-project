@@ -70,7 +70,7 @@ public class MemberService {
         log.info("update password for email: {}", email);
 
         MemberEntity memberEntity = memberRepository.findByEmail(email).orElseThrow(
-                () -> new IllegalArgumentException("User not found!")
+                () -> new IllegalArgumentException("User not found")
         );
 
         if (!passwordEncoder.matches(updatePasswordDTO.getCurrentPassword(), memberEntity.getPassword())) {
