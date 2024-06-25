@@ -50,22 +50,22 @@ public class ProductController {
         return ResponseEntity.ok(message);
     }
 
-    @GetMapping("/wish-list")
+    @GetMapping("/wishlist")
     public ResponseEntity<List<WishListRequestDTO>> getAllWishProducts(HttpServletRequest request) {
         List<WishListRequestDTO> wishList = productService.getWishProducts(request);
         return ResponseEntity.ok(wishList);
     }
 
 
-    @PostMapping("/wish-list")
+    @PostMapping("/wishlist")
     public ResponseEntity<String> addWishProduct(@RequestBody WishListRequestDTO wishListRequestDTO, HttpServletRequest request) {
         productService.addWishProduct(request, wishListRequestDTO);
-        return ResponseEntity.ok("Product added to wishlist successfully");
+        return ResponseEntity.ok("Product added to wishlist.");
     }
 
-    @DeleteMapping("/wish-list/{productId}")
+    @DeleteMapping("/wishlist/{productId}")
     public ResponseEntity<String> deleteWishProduct(@PathVariable Long productId, @RequestHeader("Authorization") String token) {
         productService.deleteWishProduct(productId, token);
-        return ResponseEntity.ok("Wishlist item deleted successfully");
+        return ResponseEntity.ok("Wishlist item deleted.");
     }
 }
