@@ -18,10 +18,11 @@ public class WishEntity {
     @JsonIgnore
     private Integer wishid;
 
+    @JsonIgnore
     private Integer productId;
+
     private String productName;
     private Integer price;
     private Integer stock;
     private String email;
-
 }

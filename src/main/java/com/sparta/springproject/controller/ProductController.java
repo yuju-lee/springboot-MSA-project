@@ -1,16 +1,11 @@
 package com.sparta.springproject.controller;
 
-import com.sparta.springproject.Util.JwtUtil;
 import com.sparta.springproject.dto.*;
-import com.sparta.springproject.model.MemberEntity;
 import com.sparta.springproject.model.ProductEntity;
 import com.sparta.springproject.service.ProductService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,9 +30,9 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{products_id}")
-    public ResponseEntity<?> getProductById(@PathVariable Integer products_id) {
-        ProductEntity product = productService.getProductById(Math.toIntExact(Long.valueOf(products_id)))
+    @GetMapping("/{productsId}")
+    public ResponseEntity<?> getProductById(@PathVariable Integer productsId) {
+        ProductEntity product = productService.getProductById(Math.toIntExact(Long.valueOf(productsId)))
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
         ProductDetailDTO productDetailDTO = new ProductDetailDTO();
@@ -55,14 +50,22 @@ public class ProductController {
         return ResponseEntity.ok(message);
     }
 
-    @GetMapping("/wishlist")
-    public List<WishListRequestDTO> getWishList(HttpServletRequest request) {
-        return productService.getAllwishProducts(request);
+    @GetMapping("/wish-list")
+    public ResponseEntity<List<WishListRequestDTO>> getAllWishProducts(HttpServletRequest request) {
+        List<WishListRequestDTO> wishList = productService.getWishProducts(request);
+        return ResponseEntity.ok(wishList);
     }
 
-    @PostMapping("/wishlist")
+
+    @PostMapping("/wish-list")
     public ResponseEntity<String> addWishProduct(@RequestBody WishListRequestDTO wishListRequestDTO, HttpServletRequest request) {
         productService.addWishProduct(request, wishListRequestDTO);
         return ResponseEntity.ok("Product added to wishlist successfully");
+    }
+
+    @DeleteMapping("/wish-list/{productId}")
+    public ResponseEntity<String> deleteWishProduct(@PathVariable Long productId, @RequestHeader("Authorization") String token) {
+        productService.deleteWishProduct(productId, token);
+        return ResponseEntity.ok("Wishlist item deleted successfully");
     }
 }

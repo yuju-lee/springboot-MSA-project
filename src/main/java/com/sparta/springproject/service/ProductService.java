@@ -85,7 +85,7 @@ public class ProductService {
         }
     }
 
-    public List<WishListRequestDTO> getAllwishProducts(HttpServletRequest request) {
+    public List<WishListRequestDTO> getWishProducts(HttpServletRequest request) {
         String token = jwtUtil.resolveToken(request);
         if (token == null || !jwtUtil.validateToken(token)) {
             throw new IllegalArgumentException("Invalid or missing token");
@@ -93,9 +93,9 @@ public class ProductService {
 
         String email = jwtUtil.getUserInfoFromToken(token).getSubject();
 
-        List<WishEntity> wishs = wishListRepository.findByEmail(email); // 이메일로 위시리스트 조회
+        List<WishEntity> wishs = wishListRepository.findByEmail(email);
         return wishs.stream()
-                .map(wish -> new WishListRequestDTO(wish.getProductName(), wish.getPrice()))
+                .map(wish -> new WishListRequestDTO(wish.getProductId(), wish.getProductName(), wish.getPrice(), wish.getStock()))
                 .collect(Collectors.toList());
     }
 
@@ -105,14 +105,14 @@ public class ProductService {
 
         MemberEntity member = memberRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        Optional<ProductEntity> optionalProduct = productRepository.findById(wishListRequestDTO.getProductId());
+        Optional<ProductEntity> optionalProduct = productRepository.findById(Long.valueOf(wishListRequestDTO.getProductId()));
         if (optionalProduct.isPresent()) {
             ProductEntity product = optionalProduct.get();
 
             WishEntity wish = new WishEntity();
             wish.setProductId(product.getProducts_id());
             wish.setProductName(product.getProductName());
-            wish.setPrice(product.getPrice() * wishListRequestDTO.getStock()); // 1개 금액 * 가격
+            wish.setPrice(product.getPrice() * wishListRequestDTO.getStock());
             wish.setStock(wishListRequestDTO.getStock());
             wish.setEmail(email);
 
@@ -120,7 +120,29 @@ public class ProductService {
         } else {
             throw new IllegalArgumentException("Product not found");
         }
+    }
 
+    public void deleteWishProduct(Long productId, String accessToken) {
+        String token = accessToken.replace(JwtUtil.BEARER_PREFIX, "");
+        if (!jwtUtil.validateToken(token)) {
+            throw new IllegalArgumentException("Invalid or expired token");
+        }
+        String email = jwtUtil.getUserInfoFromToken(token).getSubject();
+
+        // 이메일로 회원 정보 조회
+        MemberEntity member = memberRepository.findByEmail(email).orElseThrow(
+                () -> new IllegalArgumentException("User not found")
+        );
+
+        // 제품 ID와 이메일로 위시리스트 항목 조회
+        Optional<WishEntity> optionalWish = wishListRepository.findByProductIdAndEmail(Math.toIntExact(productId), email);
+        if (optionalWish.isPresent()) {
+            WishEntity wishEntity = optionalWish.get();
+            // 위시리스트 항목 삭제
+            wishListRepository.delete(wishEntity);
+        } else {
+            throw new IllegalArgumentException("Wish product not found for the user");
+        }
     }
 
 }
