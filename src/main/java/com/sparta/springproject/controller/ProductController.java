@@ -64,8 +64,8 @@ public class ProductController {
     }
 
     @DeleteMapping("/wishlist/{productId}")
-    public ResponseEntity<String> deleteWishProduct(@PathVariable Long productId, @RequestHeader("Authorization") String token) {
-        productService.deleteWishProduct(productId, token);
+    public ResponseEntity<String> deleteWishProduct(@RequestHeader("Authorization") String token, @PathVariable Long productId) {
+        productService.deleteWishProduct(token, productId);
         return ResponseEntity.ok("Wishlist item deleted.");
     }
 }
