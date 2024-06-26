@@ -8,7 +8,7 @@ import com.sparta.springproject.model.MemberEntity;
 import com.sparta.springproject.model.ProductEntity;
 import com.sparta.springproject.model.WishEntity;
 import com.sparta.springproject.repository.LikeRepository;
-import com.sparta.springproject.repository.MemberRepository;
+import com.sparta.springproject.repository.JpaMemberRepository;
 import com.sparta.springproject.repository.ProductRepository;
 import com.sparta.springproject.repository.WishListRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,16 +26,15 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final JwtUtil jwtUtil;
-    private final MemberRepository memberRepository;
-    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+    private final JpaMemberRepository jpaMemberRepository;
     private final LikeRepository likeRepository;
     private final WishListRepository wishListRepository;
 
 
-    public ProductService(ProductRepository productRepository, JwtUtil jwtUtil, MemberRepository memberRepository, LikeRepository likeRepository, WishListRepository wishListRepository) {
+    public ProductService(ProductRepository productRepository, JwtUtil jwtUtil, JpaMemberRepository jpaMemberRepository, LikeRepository likeRepository, WishListRepository wishListRepository) {
         this.productRepository = productRepository;
         this.jwtUtil = jwtUtil;
-        this.memberRepository = memberRepository;
+        this.jpaMemberRepository = jpaMemberRepository;
         this.likeRepository = likeRepository;
         this.wishListRepository = wishListRepository;
     }
@@ -56,7 +55,7 @@ public class ProductService {
         String token = accessToken.replace(JwtUtil.BEARER_PREFIX, "");
         String email = jwtUtil.getUserInfoFromToken(token).getSubject();
 
-        MemberEntity memberEntity = memberRepository.findByEmail(email).orElseThrow(
+        MemberEntity memberEntity = jpaMemberRepository.findByEmail(email).orElseThrow(
                 () -> new IllegalArgumentException("User not found!")
         );
 
@@ -103,7 +102,7 @@ public class ProductService {
         String token = request.getHeader("Authorization").replace(JwtUtil.BEARER_PREFIX, "");
         String email = jwtUtil.getUserInfoFromToken(token).getSubject();
 
-        MemberEntity member = memberRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        MemberEntity member = jpaMemberRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         Optional<ProductEntity> optionalProduct = productRepository.findById(Long.valueOf(wishListRequestDTO.getProductId()));
         if (optionalProduct.isPresent()) {
@@ -131,16 +130,13 @@ public class ProductService {
 
         String email = jwtUtil.getUserInfoFromToken(token).getSubject();
 
-        // 이메일로 회원 정보 조회
-        MemberEntity member = memberRepository.findByEmail(email).orElseThrow(
+        MemberEntity member = jpaMemberRepository.findByEmail(email).orElseThrow(
                 () -> new IllegalArgumentException("User not found")
         );
 
-        // 제품 ID와 이메일로 위시리스트 항목 조회
         Optional<WishEntity> optionalWish = wishListRepository.findByProductIdAndEmail(Math.toIntExact(productId), email);
         if (optionalWish.isPresent()) {
             WishEntity wishEntity = optionalWish.get();
-            // 위시리스트 항목 삭제
             wishListRepository.delete(wishEntity);
         } else {
             throw new IllegalArgumentException("Wish product not found for the user");
@@ -148,4 +144,3 @@ public class ProductService {
     }
 
 }
-

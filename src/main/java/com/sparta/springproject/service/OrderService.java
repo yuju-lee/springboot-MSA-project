@@ -17,15 +17,15 @@ import java.util.stream.Collectors;
 @Service
 public class OrderService {
     private final JwtUtil jwtUtil;
-    private final MemberRepository memberRepository;
+    private final JpaMemberRepository jpaMemberRepository;
     private final OrderRepository orderRepository;
     private final OrderDetailRepository orderDetailRepository;
     private final ProductRepository productRepository;
     private final WishListRepository wishListRepository;
 
-    public OrderService(JwtUtil jwtUtil, MemberRepository memberRepository, OrderRepository orderRepository, OrderDetailRepository orderDetailRepository, ProductRepository productRepository, WishListRepository wishListRepository) {
+    public OrderService(JwtUtil jwtUtil, JpaMemberRepository jpaMemberRepository, OrderRepository orderRepository, OrderDetailRepository orderDetailRepository, ProductRepository productRepository, WishListRepository wishListRepository) {
         this.jwtUtil = jwtUtil;
-        this.memberRepository = memberRepository;
+        this.jpaMemberRepository = jpaMemberRepository;
         this.orderRepository = orderRepository;
         this.orderDetailRepository = orderDetailRepository;
         this.productRepository = productRepository;
@@ -39,7 +39,7 @@ public class OrderService {
         }
         String email = jwtUtil.getUserInfoFromToken(token).getSubject();
 
-        MemberEntity member = memberRepository.findByEmail(email).orElseThrow(
+        MemberEntity member = jpaMemberRepository.findByEmail(email).orElseThrow(
                 () -> new IllegalArgumentException("User not found")
         );
 
@@ -81,7 +81,7 @@ public class OrderService {
         }
         String email = jwtUtil.getUserInfoFromToken(token).getSubject();
 
-        MemberEntity member = memberRepository.findByEmail(email).orElseThrow(
+        MemberEntity member = jpaMemberRepository.findByEmail(email).orElseThrow(
                 () -> new IllegalArgumentException("User not found")
         );
 

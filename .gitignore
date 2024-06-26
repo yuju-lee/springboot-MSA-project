@@ -43,7 +43,7 @@ out/
 ### VS Code ###
 .vscode/
 <<<<<<< HEAD
-
+.env
 =======
 /db/data/#ib_16384_0.dblwr
 /mysql_data/#ib_16384_0.dblwr

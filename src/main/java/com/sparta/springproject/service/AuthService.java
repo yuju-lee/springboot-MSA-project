@@ -4,8 +4,7 @@ import com.sparta.springproject.dto.LoginRequestDTO;
 import com.sparta.springproject.dto.LoginResponseDTO;
 import com.sparta.springproject.Util.JwtUtil;
 import com.sparta.springproject.model.MemberEntity;
-import com.sparta.springproject.repository.MemberRepository;
-import jakarta.transaction.Transactional;
+import com.sparta.springproject.repository.JpaMemberRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public class AuthService {
 
-    private final MemberRepository memberRepository;
+    private final JpaMemberRepository jpaMemberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final TokenService tokenService;
@@ -27,8 +26,8 @@ public class AuthService {
 
 
     @Autowired
-    public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenService tokenService) {
-        this.memberRepository = memberRepository;
+    public AuthService(JpaMemberRepository jpaMemberRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenService tokenService) {
+        this.jpaMemberRepository = jpaMemberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.tokenService = tokenService;
@@ -41,7 +40,7 @@ public class AuthService {
 
         try {
             // 이메일로 회원 조회
-            MemberEntity memberEntity = memberRepository.findByEmail(email)
+            MemberEntity memberEntity = jpaMemberRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("Not registered - Please try again"));
 
             // 비밀번호 검증

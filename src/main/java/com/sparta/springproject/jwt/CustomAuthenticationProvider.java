@@ -1,7 +1,7 @@
 package com.sparta.springproject.jwt;
 
 import com.sparta.springproject.model.MemberEntity;
-import com.sparta.springproject.repository.MemberRepository;
+import com.sparta.springproject.repository.JpaMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
-    private final MemberRepository memberRepository;
+    private final JpaMemberRepository jpaMemberRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -23,7 +23,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         String loginId = authentication.getName();
         String password = (String) authentication.getCredentials();
 
-        MemberEntity memberEntity = memberRepository.findByEmail(loginId)
+        MemberEntity memberEntity = jpaMemberRepository.findByEmail(loginId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + loginId));
 
         if (!passwordEncoder.matches(password, memberEntity.getPassword())) {
